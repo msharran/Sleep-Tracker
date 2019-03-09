@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SleepTimeCalculatorPOC</string>
+    <string name="SLEEPING_HOURS">sleeping_hours</string>
 </resources>
