@@ -10,7 +10,7 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
         <receiver
-                android:name=".utils.Restarter"
+                android:name=".utils.Receiver"
                 android:enabled="true"
                 android:exported="true">
             <intent-filter>
