@@ -1,20 +1,19 @@
 package com.example.sharran.sleeptimecalculatorpoc.utils
 
 import android.support.v4.app.NotificationCompat
-import com.example.sharran.sleeptimecalculatorpoc.activity.MainActivity
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import com.example.sharran.sleeptimecalculatorpoc.R
-import android.R.string.cancel
 import android.app.*
 import android.content.Context
-import android.content.Context.NOTIFICATION_SERVICE
 import android.graphics.Color
-import android.support.v4.content.ContextCompat.getSystemService
 import android.support.annotation.RequiresApi
 import android.util.Log
 import java.util.*
+import android.content.IntentFilter
+import com.example.sharran.sleeptimecalculatorpoc.utils.Receiver.Companion.SCREEN_OFF
+import com.example.sharran.sleeptimecalculatorpoc.utils.Receiver.Companion.SCREEN_ON
 
 
 class BackgroundService : Service() {
@@ -32,6 +31,12 @@ class BackgroundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+
+        val filter = IntentFilter(Intent.ACTION_SCREEN_ON)
+        filter.addAction(Intent.ACTION_SCREEN_OFF)
+        val receiver = Receiver()
+        registerReceiver(receiver, filter)
+
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O)
             startMyOwnForeground()
         else
@@ -60,18 +65,26 @@ class BackgroundService : Service() {
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        startTimer()
+//        startTimer()
+        val screenOn = intent.getStringExtra("screen_state")
+        if (screenOn == SCREEN_ON) {
+            println("Screen unlocked :::::::::::::: $screenOn")
+            stoptimertask()
+        } else if (screenOn == SCREEN_OFF){
+            println("Screen locked :::::::::::::: $screenOn")
+            startTimer()
+        }
         return Service.START_STICKY
     }
 
 
     override fun onDestroy() {
         super.onDestroy()
-        stoptimertask()
+//        stoptimertask()
 
         val broadcastIntent = Intent()
         broadcastIntent.action = "restartservice"
-        broadcastIntent.setClass(this, Restarter::class.java)
+        broadcastIntent.setClass(this, Receiver::class.java)
         this.sendBroadcast(broadcastIntent)
     }
 
@@ -79,6 +92,8 @@ class BackgroundService : Service() {
     private var timer: Timer? = null
     private var timerTask: TimerTask? = null
     fun startTimer() {
+        if (timer!=null)
+            return
         timer = Timer()
         timerTask = object : TimerTask() {
             override fun run() {
@@ -92,6 +107,7 @@ class BackgroundService : Service() {
         if (timer != null) {
             timer!!.cancel()
             timer = null
+            counter = 0
         }
     }
 }
