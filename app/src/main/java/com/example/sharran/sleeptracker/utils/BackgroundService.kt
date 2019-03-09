@@ -1,10 +1,10 @@
-package com.example.sharran.sleeptimecalculatorpoc.utils
+package com.example.sharran.sleeptracker.utils
 
 import android.support.v4.app.NotificationCompat
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
-import com.example.sharran.sleeptimecalculatorpoc.R
+import com.example.sharran.sleeptracker.R
 import android.app.*
 import android.content.Context
 import android.graphics.Color
@@ -12,8 +12,8 @@ import android.support.annotation.RequiresApi
 import android.util.Log
 import java.util.*
 import android.content.IntentFilter
-import com.example.sharran.sleeptimecalculatorpoc.utils.Receiver.Companion.SCREEN_OFF
-import com.example.sharran.sleeptimecalculatorpoc.utils.Receiver.Companion.SCREEN_ON
+import com.example.sharran.sleeptracker.utils.Receiver.Companion.SCREEN_OFF
+import com.example.sharran.sleeptracker.utils.Receiver.Companion.SCREEN_ON
 
 
 class BackgroundService : Service() {
@@ -23,7 +23,9 @@ class BackgroundService : Service() {
         val channelName = "Background Service"
     }
 
-    var counter = 0
+    private var timer: Timer? = null
+    private var timerTask: TimerTask? = null
+    private var counter = 0
 
     override fun onBind(intent: Intent): IBinder? {
         return null
@@ -42,6 +44,7 @@ class BackgroundService : Service() {
         else
             startForeground(1, Notification())
     }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun startMyOwnForeground() {
@@ -87,10 +90,6 @@ class BackgroundService : Service() {
         broadcastIntent.setClass(this, Receiver::class.java)
         this.sendBroadcast(broadcastIntent)
     }
-
-
-    private var timer: Timer? = null
-    private var timerTask: TimerTask? = null
     fun startTimer() {
         if (timer!=null)
             return

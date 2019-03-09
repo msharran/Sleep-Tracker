@@ -1,4 +1,4 @@
-package com.example.sharran.sleeptimecalculatorpoc
+package com.example.sharran.sleeptracker
 
 import org.junit.Test
 

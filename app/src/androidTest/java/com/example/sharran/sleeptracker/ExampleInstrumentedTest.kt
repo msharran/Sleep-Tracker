@@ -1,4 +1,4 @@
-package com.example.sharran.sleeptimecalculatorpoc
+package com.example.sharran.sleeptracker
 
 import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4

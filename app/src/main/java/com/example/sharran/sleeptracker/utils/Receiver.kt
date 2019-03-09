@@ -1,4 +1,4 @@
-package com.example.sharran.sleeptimecalculatorpoc.utils
+package com.example.sharran.sleeptracker.utils
 
 import android.content.Intent
 import android.os.Build
@@ -36,8 +36,6 @@ class Receiver : BroadcastReceiver() {
                 serviceIntent.putExtra("screen_state", wasScreenOn)
             }
         }
-
-
         return serviceIntent
     }
 }

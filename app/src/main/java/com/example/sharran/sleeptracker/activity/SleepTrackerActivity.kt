@@ -1,26 +1,26 @@
-package com.example.sharran.sleeptimecalculatorpoc.activity
+package com.example.sharran.sleeptracker.activity
 
-import com.example.sharran.sleeptimecalculatorpoc.utils.BackgroundService
+import com.example.sharran.sleeptracker.utils.BackgroundService
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import com.example.sharran.sleeptimecalculatorpoc.R
+import com.example.sharran.sleeptracker.R
 import android.content.Intent
 import android.app.ActivityManager
 import android.content.Context
 import android.util.Log
 
 
-class MainActivity : AppCompatActivity() {
+class SleepTrackerActivity : AppCompatActivity() {
 
-    private lateinit var serviceIntent: Intent
+    private lateinit var backgroundServiceIntent: Intent
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_sleep_tracker)
 
-        serviceIntent = Intent(this, BackgroundService::class.java)
+        backgroundServiceIntent = Intent(this, BackgroundService::class.java)
         if (!isMyServiceRunning(BackgroundService::class.java)) {
-            startService(serviceIntent)
+            startService(backgroundServiceIntent)
         }
     }
 
@@ -35,6 +35,4 @@ class MainActivity : AppCompatActivity() {
         Log.i("Service status", "Not running")
         return false
     }
-
-
 }

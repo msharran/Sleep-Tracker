@@ -1,16 +1,16 @@
-package com.example.sharran.sleeptimecalculatorpoc.utils
+package com.example.sharran.sleeptracker.utils
 
 import android.content.Context
-import com.example.sharran.sleeptimecalculatorpoc.activity.MainActivity
-import com.example.sharran.sleeptimecalculatorpoc.R
+import com.example.sharran.sleeptracker.activity.SleepTrackerActivity
+import com.example.sharran.sleeptracker.R
 
 class AppPreference private constructor(){
     companion object {
         private val appPreference by lazy { AppPreference() }
-        fun init() = appPreference
+        fun builder() = appPreference
     }
 
-    fun putString(context : MainActivity, value : String){
+    fun putString(context : SleepTrackerActivity, value : String){
         val sharedPref = context.getPreferences(Context.MODE_PRIVATE)
         with (sharedPref.edit()) {
             putString(context.getString(R.string.SLEEPING_HOURS), value)
@@ -20,7 +20,7 @@ class AppPreference private constructor(){
         }
     }
 
-    fun getString(context: MainActivity, defaultValue: String): String {
+    fun getString(context: SleepTrackerActivity, defaultValue: String): String {
         val sharedPref = context.getPreferences(Context.MODE_PRIVATE)
         return sharedPref.getString(context.getString(R.string.SLEEPING_HOURS), defaultValue) ?: defaultValue
     }
