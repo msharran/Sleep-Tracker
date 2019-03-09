@@ -14,7 +14,9 @@ class AppPreference private constructor(){
         val sharedPref = context.getPreferences(Context.MODE_PRIVATE)
         with (sharedPref.edit()) {
             putString(context.getString(R.string.SLEEPING_HOURS), value)
-            commit()
+            val commit = commit()
+            println("$value saved status $commit")
+            commit
         }
     }
 
