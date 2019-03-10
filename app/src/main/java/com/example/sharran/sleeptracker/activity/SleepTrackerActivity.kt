@@ -8,16 +8,19 @@ import android.content.Intent
 import android.app.ActivityManager
 import android.content.Context
 import android.util.Log
+import com.example.sharran.sleeptracker.utils.AppContext
 
 
 class SleepTrackerActivity : AppCompatActivity() {
 
     private lateinit var backgroundServiceIntent: Intent
+    private val appContext:AppContext = AppContext.initialize
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sleep_tracker)
 
+        appContext.sleepTrackerActivity =this
         backgroundServiceIntent = Intent(this, BackgroundService::class.java)
         if (!isMyServiceRunning(BackgroundService::class.java)) {
             startService(backgroundServiceIntent)

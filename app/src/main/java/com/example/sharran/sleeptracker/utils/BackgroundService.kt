@@ -12,8 +12,11 @@ import android.support.annotation.RequiresApi
 import android.util.Log
 import java.util.*
 import android.content.IntentFilter
+import com.example.sharran.sleeptracker.utils.DataBase.Companion.SLEEPING_TIME
+import com.example.sharran.sleeptracker.utils.TimeUtils.Companion.getCurrentTime
 import com.example.sharran.sleeptracker.utils.Receiver.Companion.SCREEN_OFF
 import com.example.sharran.sleeptracker.utils.Receiver.Companion.SCREEN_ON
+import com.example.sharran.sleeptracker.utils.TimeUtils.Companion.fetchTimeInHHmmSS
 
 
 class BackgroundService : Service() {
@@ -21,11 +24,15 @@ class BackgroundService : Service() {
     companion object {
         val NOTIFICATION_CHANNEL_ID = "example.permanence"
         val channelName = "Background Service"
+        var isTimeSavedLocally  = false
     }
 
+    private var sleepingTime:String = "0"
     private var timer: Timer? = null
     private var timerTask: TimerTask? = null
-    private var counter = 0
+    private var counter = 1
+    private val appContext = AppContext.initialize
+    private val database = appContext.database
 
     override fun onBind(intent: Intent): IBinder? {
         return null
@@ -40,59 +47,110 @@ class BackgroundService : Service() {
         registerReceiver(receiver, filter)
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O)
-            startMyOwnForeground()
+            startForegroundAboveOreo()
         else
-            startForeground(1, Notification())
+            startForeground(1, buildNotification("App is running in background"))
+
     }
 
-
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun startMyOwnForeground() {
-        val chan = NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE)
-        chan.lightColor = Color.BLUE
-        chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+    private fun startForegroundAboveOreo() {
+        val notificationChannel = NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE)
+        notificationChannel.lightColor = Color.BLUE
+        notificationChannel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
 
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.createNotificationChannel(chan)
+        val notificationManager = getNotificationManager()
+        notificationManager.createNotificationChannel(notificationChannel)
 
+        val notification = buildNotification("App is running in background")
+        startForeground(1, notification)
+    }
+
+    private fun getNotificationManager() = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+    private fun buildNotification(title :String): Notification {
         val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-        val notification = notificationBuilder.setOngoing(true)
-            .setContentTitle("App is running in background")
+            .setOngoing(true)
+            .setContentTitle(title)
             .setSmallIcon(R.drawable.ic_sleeping)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notificationBuilder
             .setPriority(NotificationManager.IMPORTANCE_MIN)
             .setCategory(Notification.CATEGORY_SERVICE)
-            .build()
-        startForeground(2, notification)
+        }
+        return notificationBuilder.build()
     }
 
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-//        startTimer()
         val screenOn = intent.getStringExtra("screen_state")
-        if (screenOn == SCREEN_ON) {
-            println("Screen unlocked :::::::::::::: $screenOn")
-            stoptimertask()
-        } else if (screenOn == SCREEN_OFF){
-            println("Screen locked :::::::::::::: $screenOn")
-            startTimer()
+        when (screenOn) {
+            SCREEN_ON -> {
+                println("Screen unlocked :::::::::::::: $screenOn")
+                stopTimer()
+                saveAndShowSleepingTime()
+            }
+            SCREEN_OFF -> {
+                println("Screen locked :::::::::::::: $screenOn")
+                startTimer()
+            }
         }
         return Service.START_STICKY
     }
 
+    private fun saveAndShowSleepingTime() {
+        val currentTime = getCurrentTime(format = "HH").toInt()
+        when {
+            currentTime in 9..11 && !isTimeSavedLocally -> {
+                saveSleepingTimeLocallyAndNotify()
+                isTimeSavedLocally = true
+            }
+            currentTime in 9..11 && isTimeSavedLocally -> {
+                isTimeSavedLocally = false
+                saveSleepingHoursToDB()
+            }
+            else -> {
+                isTimeSavedLocally = false
+                saveSleepingHoursToDB()
+            }
+        }
+    }
+
+
+    private fun saveSleepingHoursToDB() {
+        if (counter > database.getData(SLEEPING_TIME, "0").toInt()) {
+            database.putData(key = SLEEPING_TIME, value = (counter).toString())
+        }
+    }
+
+    private fun saveSleepingTimeLocallyAndNotify() {
+        saveSleepingHoursToDB()
+        sleepingTime = fetchTimeInHHmmSS(database.getData(key = SLEEPING_TIME, defaultValue = "0").toBigDecimal())
+        notify("Sleep duration $sleepingTime")
+        database.clearData(SLEEPING_TIME)
+        println("Sleep duration $sleepingTime")
+    }
+
+    private fun notify(text :String) {
+        val notificationManager = getNotificationManager()
+        val notification = buildNotification(text)
+        notificationManager.notify(1, notification)
+    }
 
     override fun onDestroy() {
         super.onDestroy()
-//        stoptimertask()
 
         val broadcastIntent = Intent()
         broadcastIntent.action = "restartservice"
         broadcastIntent.setClass(this, Receiver::class.java)
         this.sendBroadcast(broadcastIntent)
     }
-    fun startTimer() {
+
+    private fun startTimer() {
         if (timer!=null)
             return
+        counter = 1
         timer = Timer()
         timerTask = object : TimerTask() {
             override fun run() {
@@ -102,11 +160,10 @@ class BackgroundService : Service() {
         timer!!.schedule(timerTask, 1000, 1000) //
     }
 
-    fun stoptimertask() {
+    private fun stopTimer() {
         if (timer != null) {
             timer!!.cancel()
             timer = null
-            counter = 0
         }
     }
 }
