@@ -25,6 +25,7 @@ class BackgroundService : Service() {
         val NOTIFICATION_CHANNEL_ID = "example.permanence"
         val channelName = "Background Service"
         var isTimeSavedLocally  = false
+        const val USER_NOTIFIED = "user notified"
     }
 
     private var sleepingTime:String = "0"
@@ -102,12 +103,12 @@ class BackgroundService : Service() {
     private fun saveAndShowSleepingTime() {
         val currentTime = getCurrentTime(format = "HH").toInt()
         when {
-            currentTime in 9..11 && !isTimeSavedLocally -> {
-                saveSleepingTimeLocallyAndNotify()
-                isTimeSavedLocally = true
+            currentTime in 9..11 && !database.getBoolean(USER_NOTIFIED,false) -> {
+                saveAndNotify()
+                database.putBoolean(USER_NOTIFIED,true)
             }
-            currentTime in 9..11 && isTimeSavedLocally -> {
-                isTimeSavedLocally = false
+            currentTime >11 && database.getBoolean(USER_NOTIFIED,false) -> {
+                database.putBoolean(USER_NOTIFIED,false)
                 saveSleepingHoursToDB()
             }
             else -> {
@@ -119,16 +120,16 @@ class BackgroundService : Service() {
 
 
     private fun saveSleepingHoursToDB() {
-        if (counter > database.getData(SLEEPING_TIME, "0").toInt()) {
-            database.putData(key = SLEEPING_TIME, value = (counter).toString())
+        if (counter > database.getString(SLEEPING_TIME, "0").toInt()) {
+            database.putString(key = SLEEPING_TIME, value = (counter).toString())
         }
     }
 
-    private fun saveSleepingTimeLocallyAndNotify() {
+    private fun saveAndNotify() {
         saveSleepingHoursToDB()
-        sleepingTime = fetchTimeInHHmmSS(database.getData(key = SLEEPING_TIME, defaultValue = "0").toBigDecimal())
+        sleepingTime = fetchTimeInHHmmSS(database.getString(key = SLEEPING_TIME, defaultValue = "0").toBigDecimal())
         notify("Sleep duration $sleepingTime")
-        database.clearData(SLEEPING_TIME)
+        database.clearString(SLEEPING_TIME)
         println("Sleep duration $sleepingTime")
     }
 

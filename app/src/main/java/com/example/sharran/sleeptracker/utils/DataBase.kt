@@ -5,7 +5,7 @@ import android.content.Context
 class DataBase {
     private val context = AppContext.initialize.sleepTrackerActivity!!
 
-    fun putData(key: String,value: String){
+    fun putString(key: String, value: String){
         val sharedPref = context.getPreferences(Context.MODE_PRIVATE)
         with (sharedPref.edit()) {
             putString(key, value)
@@ -15,14 +15,29 @@ class DataBase {
         }
     }
 
-    fun getData(key: String,defaultValue: String): String {
+    fun getString(key: String, defaultValue: String): String {
         val sharedPref = context.getPreferences(Context.MODE_PRIVATE)
         return sharedPref.getString(key, defaultValue) ?: defaultValue
     }
 
-    fun clearData(key :String){
-        this.putData(key,"0")
+    fun clearString(key :String) = this.putString(key,"0")
+
+    fun putBoolean(key: String, value: Boolean){
+        val sharedPref = context.getPreferences(Context.MODE_PRIVATE)
+        with (sharedPref.edit()) {
+            putBoolean(key, value)
+            val commit = commit()
+            println(" saved status $commit :::: is data saved $value")
+            commit
+        }
     }
+
+    fun getBoolean(key: String, defaultValue: Boolean): Boolean {
+        val sharedPref = context.getPreferences(Context.MODE_PRIVATE)
+        return sharedPref.getBoolean(key, defaultValue)
+    }
+
+    fun clearBoolean(key: String) = this.putBoolean(key,false)
 
     companion object {
         val SLEEPING_TIME = "sleeping_hours"
